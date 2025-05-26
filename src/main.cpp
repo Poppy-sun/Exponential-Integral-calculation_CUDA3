@@ -99,21 +99,14 @@ int main(int argc, char* argv[]) {
         }
      }
 
-     if (cpu && gpu) {
-        float maxF = 0.0f; int idxF = -1;
-        double maxD = 0.0; int idxD = -1;
-        for (unsigned int i = 0; i < n * m; ++i) {
-            float diffF = fabs(cpuF[i] - gpuF[i]);
-            double diffD = fabs(cpuD[i] - gpuD[i]);
-            if (diffF > maxF) { maxF = diffF; idxF = i; }
-            if (diffD > maxD) { maxD = diffD; idxD = i; }
-        }
-        if (idxF >= 0)
-            printf("Max float diff = %e\n", maxF);
-        if (idxD >= 0)
-            printf("Max double diff = %e\n", maxD);
+    if (cpu && gpu) {
+    if (timeGpuFloat > 0) printf("Speedup (float):  %.2fx\n", timeCpuFloat / timeGpuFloat);        
+    if (timeGpuDouble > 0) printf("Speedup (double): %.2fx\n", timeCpuDouble / timeGpuDouble);
     }
 
+    if (verbose && cpu) outputResults(cpuFloat, cpuDouble);
+
+    if (cpu && gpu) compareResults(cpuFloat, gpuFloat, cpuDouble, gpuDouble);
     return 0;
 }
 
@@ -173,4 +166,38 @@ int parseArguments (int argc, char *argv[]) {
                 }
         }
         return 0;
+}
+
+void outputResults(const std::vector<float>& floatData, const std::vector<double>& doubleData) {
+    for (unsigned int i = 1; i <= n; i++) {
+        for (unsigned int j = 1; j <= numberOfSamples; j++) {
+            double x = a + j * (b - a) / numberOfSamples;
+            cout << "CPU==> exponentialIntegralDouble(" << i << "," << x << ")="
+                 << doubleData[(i - 1) * numberOfSamples + (j - 1)] << " , ";
+            cout << "exponentialIntegralFloat(" << i << "," << x << ")="
+                 << floatData[(i - 1) * numberOfSamples + (j - 1)] << endl;
+        }
+    }
+}
+
+void compareResults(const std::vector<float>& cpuF, const std::vector<float>& gpuF,
+                    const std::vector<double>& cpuD, const std::vector<double>& gpuD) {
+    float maxF = 0.0f; int idxF = -1;
+    double maxD = 0.0; int idxD = -1;
+    for (unsigned int i = 0; i < n * numberOfSamples; ++i) {
+        float diffF = fabs(cpuF[i] - gpuF[i]);
+        double diffD = fabs(cpuD[i] - gpuD[i]);
+        if (diffF > maxF) { maxF = diffF; idxF = i; }
+        if (diffD > maxD) { maxD = diffD; idxD = i; }
+    }
+    if (idxF >= 0) {
+        printf("Max float diff = %e at (n=%d, x=%.6f)\n", maxF, idxF / numberOfSamples + 1,
+               a + ((idxF % numberOfSamples) + 1) * (b - a) / numberOfSamples);
+    }
+    if (idxD >= 0) {
+        printf("Max double diff = %e at (n=%d, x=%.6f)\n", maxD, idxD / numberOfSamples + 1,
+               a + ((idxD % numberOfSamples) + 1) * (b - a) / numberOfSamples);
+    }
+    if (maxF > 1e-5f || maxD > 1e-5)
+        printf("[WARNING] Numerical difference exceeds threshold!\n");
 }
