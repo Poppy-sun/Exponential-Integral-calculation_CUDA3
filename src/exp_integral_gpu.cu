@@ -112,13 +112,26 @@ void exponentialIntegralGPUFloat(int n, int m, float a, float b, float* host_res
     size_t size = n * m * sizeof(float);
     cudaMalloc(&d_result, size);
 
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+    cudaEventRecord(start);
+
     dim3 threadsPerBlock(16, 16);
     dim3 numBlocks((m + 15) / 16, (n + 15) / 16);
     expIntKernelFloat<<<numBlocks, threadsPerBlock>>>(n, m, a, b, d_result);
-    cudaMemcpy(host_result, d_result, size, cudaMemcpyDeviceToHost);
-    cudaFree(d_result);
 
-    *time = 0.0; 
+    cudaMemcpyAsync(host_result, d_result, size, cudaMemcpyDeviceToHost, stream);
+    cudaEventRecord(stop);
+    cudaEventSynchronize(stop);
+
+    float milliseconds = 0;
+    cudaEventElapsedTime (&milliseconds, start, stop);
+    *time = milliseconds/1000.0;
+
+    cudaFree(d_result);
+    cudaEventDestroy(start);
+    cudaEventDestroy(stop);
 }
 
 void exponentialIntegralGPUDouble(int n, int m, double a, double b, double* host_result, double* time) {
@@ -129,9 +142,17 @@ void exponentialIntegralGPUDouble(int n, int m, double a, double b, double* host
     dim3 threadsPerBlock(16, 16);
     dim3 numBlocks((m + 15) / 16, (n + 15) / 16);
     expIntKernelDouble<<<numBlocks, threadsPerBlock>>>(n, m, a, b, d_result);
-    cudaMemcpy(host_result, d_result, size, cudaMemcpyDeviceToHost);
-    cudaFree(d_result);
+   
+    cudaMemcpyAsync(host_result, d_result, size, cudaMemcpyDeviceToHost, stream);
+    cudaEventRecord(stop, stream);
+    cudaEventSynchronize(stop);
 
-    *time = 0.0; 
+    float milliseconds = 0;
+    cudaEventElapsedTime(&milliseconds, start, stop);
+    *time = milliseconds / 1000.0;
+
+    cudaFree(d_result);
+    cudaEventDestroy(start);
+    cudaEventDestroy(stop);
 }
 
