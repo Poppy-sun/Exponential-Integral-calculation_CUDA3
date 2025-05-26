@@ -3,10 +3,12 @@
 #include <math.h>
 #include <stdio.h>
 
+__constant__ float constEulerFloat = 0.5772156649015329f;
+__constant__ double constEulerDouble = 0.5772156649015329;
+
 __device__ float exponentialIntegralFloatKernel(int n, float x) {
     const float epsilon = 1.E-30f;
     const float big = 1.E+30f;
-    const float eulerConstant = 0.5772156649015329f;
     int i, ii, nm1 = n - 1;
     float a, b, c, d, del, fact, h, psi, ans = 0.0f;
 
@@ -28,14 +30,14 @@ __device__ float exponentialIntegralFloatKernel(int n, float x) {
         }
         return h * expf(-x);
     } else {
-        ans = (nm1 != 0) ? 1.0f / nm1 : -logf(x) - eulerConstant;
+        ans = (nm1 != 0) ? 1.0f / nm1 : -logf(x) - constEulerFloat;
         fact = 1.0f;
         for (i = 1; i <= 1000; i++) {
             fact *= -x / i;
             if (i != nm1) {
                 del = -fact / (i - nm1);
             } else {
-                psi = -eulerConstant;
+                psi = -constEulerFloat;
                 for (ii = 1; ii <= nm1; ii++) psi += 1.0f / ii;
                 del = fact * (-logf(x) + psi);
             }
@@ -49,7 +51,6 @@ __device__ float exponentialIntegralFloatKernel(int n, float x) {
 __device__ double exponentialIntegralDoubleKernel(int n, double x) {
     const double epsilon = 1.E-30;
     const double big = 1.E+300;
-    const double eulerConstant = 0.5772156649015329;
     int i, ii, nm1 = n - 1;
     double a, b, c, d, del, fact, h, psi, ans = 0.0;
 
@@ -71,14 +72,14 @@ __device__ double exponentialIntegralDoubleKernel(int n, double x) {
         }
         return h * exp(-x);
     } else {
-        ans = (nm1 != 0) ? 1.0 / nm1 : -log(x) - eulerConstant;
+        ans = (nm1 != 0) ? 1.0 / nm1 : -log(x) - constEulerDouble;
         fact = 1.0;
         for (i = 1; i <= 1000; i++) {
             fact *= -x / i;
             if (i != nm1) {
                 del = -fact / (i - nm1);
             } else {
-                psi = -eulerConstant;
+                psi = -constEulerDouble;
                 for (ii = 1; ii <= nm1; ii++) psi += 1.0 / ii;
                 del = fact * (-log(x) + psi);
             }
