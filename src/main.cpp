@@ -22,6 +22,10 @@ double a = 0.0, b = 10.0;
 int parseArguments(int argc, char *argv[]);
 void printUsage();
 double get_time_sec();
+void outputResults(const std::vector<float>& floatData, const std::vector<double>& doubleData);
+void compareResults(const std::vector<float>& cpuF, const std::vector<float>& gpuF,
+                    const std::vector<double>& cpuD, const std::vector<double>& gpuD);
+
 
 int main(int argc, char* argv[]) {
     parseArguments(argc, argv);
@@ -82,10 +86,17 @@ int main(int argc, char* argv[]) {
     }
 
     if (gpu) {
-       
-        exponentialIntegralGPUFloat(n, numberOfSamples, a, b, gpuFloat.data(), &timeGpuFloat, stream1);
+        cudaStream_t stream1,stream2;
+        cudaStreamCreate(&stream1);
+        cudaStreamCreate(&stream2);
+        
+	exponentialIntegralGPUFloat(n, numberOfSamples, a, b, gpuFloat.data(), &timeGpuFloat, stream1);
         exponentialIntegralGPUDouble(n, numberOfSamples, a, b, gpuDouble.data(), &timeGpuDouble, stream2);
-
+        
+	cudaStreamSynchronize(stream1);
+        cudaStreamSynchronize(stream2);
+        cudaStreamDestroy(stream1);
+        cudaStreamDestroy(stream2);
         }
 
      if (timing) {

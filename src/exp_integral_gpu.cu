@@ -113,7 +113,7 @@ __global__ void expIntKernelDouble(int n, int m, double a, double b, double* res
     }
 }
 
-void exponentialIntegralGPUFloat(int n, int m, float a, float b, float* host_result, double* time) {
+void exponentialIntegralGPUFloat(int n, int m, float a, float b, float* host_result, double* time, cudaStream_t stream) {
     float* d_result;
     size_t size = n * m * sizeof(float);
     cudaMalloc(&d_result, size);
@@ -121,7 +121,7 @@ void exponentialIntegralGPUFloat(int n, int m, float a, float b, float* host_res
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
-    cudaEventRecord(start);
+    cudaEventRecord(start, stream);
 
     dim3 threadsPerBlock(16, 16);
     dim3 numBlocks((m + 15) / 16, (n + 15) / 16);
@@ -140,10 +140,15 @@ void exponentialIntegralGPUFloat(int n, int m, float a, float b, float* host_res
     cudaEventDestroy(stop);
 }
 
-void exponentialIntegralGPUDouble(int n, int m, double a, double b, double* host_result, double* time) {
+void exponentialIntegralGPUDouble(int n, int m, double a, double b, double* host_result, double* time,cudaStream_t stream) {
     double* d_result;
     size_t size = n * m * sizeof(double);
     cudaMalloc(&d_result, size);
+
+    cudaEvent_t start,stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+    cudaEventRecord(start, stream);
 
     dim3 threadsPerBlock(16, 16);
     dim3 numBlocks((m + 15) / 16, (n + 15) / 16);
