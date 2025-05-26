@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
         double startF = get_time_sec();
         for (unsigned int ui = 1; ui <= n; ui++) {
             for (unsigned int uj = 1; uj <= numberOfSamples; uj++) {
-                double x = a + uj * (b - a) / numberOfSamples;
+                double x = a + uj * (b - a) / (double)numberOfSamples;
                 cpuFloat[(ui - 1) * numberOfSamples + (uj - 1)] = exponentialIntegralFloatCPU(ui, x);
                 }
         }
@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
          double startD = get_time_sec();
         for (unsigned int ui = 1; ui <= n; ui++) {
             for (unsigned int uj = 1; uj <= numberOfSamples; uj++) {
-                double x = a + uj * (b - a) / numberOfSamples;
+                double x = a + uj * (b - a) / (double)numberOfSamples;
                 cpuDouble[(ui - 1) * numberOfSamples + (uj - 1)] = exponentialIntegralDoubleCPU(ui, x);
             }
         }
