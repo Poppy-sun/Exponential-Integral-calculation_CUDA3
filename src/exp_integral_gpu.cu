@@ -54,6 +54,11 @@ __device__ double exponentialIntegralDoubleKernel(int n, double x) {
     int i, ii, nm1 = n - 1;
     double a, b, c, d, del, fact, h, psi, ans = 0.0;
 
+__shared__ double harmonicTable[1024];
+if (threadIdx.x<1024)
+    harmonicTable[threadIdx.x] = 1.0/(threadIdx.x + 1);
+__syncthreads();
+
     if (n == 0) return exp(-x) / x;
     if (x > 1.0) {
         b = x + n;
@@ -80,7 +85,7 @@ __device__ double exponentialIntegralDoubleKernel(int n, double x) {
                 del = -fact / (i - nm1);
             } else {
                 psi = -constEulerDouble;
-                for (ii = 1; ii <= nm1; ii++) psi += 1.0 / ii;
+                for (ii = 1; ii <= nm1 && ii<=1024; ii++) psi += harmonicTable[ii - 1];
                 del = fact * (-log(x) + psi);
             }
             ans += del;
